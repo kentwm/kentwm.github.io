@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh api repos/kentwm/kentwm.github.io/pages)",
+      "WebFetch(domain:kentwm.github.io)"
+    ]
+  }
+}

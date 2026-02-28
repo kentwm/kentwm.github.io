@@ -108,9 +108,9 @@ body {
 }
 
 .hero-logo img {
-    height: 130px;
-    border-radius: 14px;
-    opacity: 0.92;
+    width: min(380px, 72vw);
+    height: auto;
+    filter: invert(1);
 }
 
 .hero-name {
@@ -318,6 +318,6 @@ body {
     }
 
     .hero-logo img {
-        height: 100px;
+        width: min(260px, 68vw);
     }
 }
