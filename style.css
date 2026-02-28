@@ -110,7 +110,7 @@ body {
 .hero-logo img {
     width: min(380px, 72vw);
     height: auto;
-    filter: invert(1);
+    filter: invert(56%) sepia(69%) saturate(500%) hue-rotate(82deg) brightness(97%);
 }
 
 .hero-name {
