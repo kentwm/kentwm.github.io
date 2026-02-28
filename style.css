@@ -5,12 +5,12 @@
 }
 
 :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --border: #30363d;
+    --bg: #0c1220;
+    --surface: #111928;
+    --border: #1f2d42;
     --text: #e6edf3;
-    --text-muted: #8b949e;
-    --text-body: #c9d1d9;
+    --text-muted: #7d8fa3;
+    --text-body: #c2cedd;
     --accent: #4caf50;
     --accent-hover: #66bb6a;
     --accent-dim: rgba(76, 175, 80, 0.12);
@@ -42,7 +42,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(13, 13, 13, 0.92);
+    background: rgba(12, 18, 32, 0.94);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border);
