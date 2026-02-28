@@ -5,9 +5,9 @@
 }
 
 :root {
-    --bg: #0c1220;
-    --surface: #111928;
-    --border: #1f2d42;
+    --bg: #0e2040;
+    --surface: #142b55;
+    --border: #1e3d6e;
     --text: #e6edf3;
     --text-muted: #7d8fa3;
     --text-body: #c2cedd;
@@ -42,7 +42,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(12, 18, 32, 0.94);
+    background: rgba(14, 32, 64, 0.95);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border);

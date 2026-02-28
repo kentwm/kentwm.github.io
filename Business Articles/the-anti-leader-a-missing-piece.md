@@ -10,43 +10,21 @@ Looking back, I missed a fourth type. In some ways, it may be the most damaging 
 
 The "it's about me" leader.
 
-## The First Three Anti-Leaders
+## The First Three Still Matter
 
-The first three still show up everywhere, and they are worth naming clearly because they do real damage.
+The first three still show up everywhere, and each of them damages an organization in a predictable way.
 
 ### 1. The "My Way" Type
 
-These leaders believe they are the smartest person in the room, and they act like it.
-
-They insist work must be done their way because their experience, expertise, or past success has convinced them they already know the best answer. Sometimes they truly are highly skilled in one area, but they make the mistake of treating that expertise as universal authority.
-
-The problem is not that they have standards. The problem is that they confuse "different" with "wrong."
-
-When a leader shuts down every new approach, they do more than frustrate people. They train the organization to stop thinking. New ideas get filtered out before they are tested. Team members stop bringing forward improvements because they already know how the conversation will end.
-
-That kind of leadership creates stagnation. It is one of the fastest ways for a company to go from leading a market to chasing one.
+These leaders insist work must be done their way because they believe their past success gives them the best answer in every situation. The problem is not high standards. The problem is confusing "different" with "wrong." When leaders shut down every alternative approach, they train people to stop thinking, and the organization gradually stagnates.
 
 ### 2. The Control Freak
 
-Control freaks may say they value input, but in practice they need every decision, every handoff, and every action to run through them.
-
-They micromanage because they do not trust others to carry responsibility without constant oversight. Some believe this protects quality. In reality, it limits the team to only what one person can personally watch and approve.
-
-That creates a ceiling.
-
-Small teams can sometimes survive under this model for a while, especially if the leader is highly capable. But growth exposes the weakness quickly. People do not develop. Future leaders never get room to emerge. Bottlenecks multiply. Burnout follows.
-
-An organization cannot scale if one person insists on being the center of every moving part.
+Control freaks may invite input, but they still need every decision and every handoff to run through them. They mistake constant oversight for quality control, when in reality they are limiting the team to what one person can monitor. That creates a hard ceiling: people do not develop, bottlenecks multiply, and growth slows because the organization cannot scale around a leader who must control everything.
 
 ### 3. The Blame Manager
 
-When something goes wrong, blame managers immediately look for who to fault instead of what to fix.
-
-They focus on assigning responsibility before they understand the cause. They often interpret problems as proof of someone else's incompetence rather than signs of missing resources, unclear expectations, poor timing, weak process design, or conflicting priorities.
-
-That approach changes the behavior of everyone around them.
-
-People start protecting themselves instead of solving problems. They avoid risk. They hide mistakes. They say less, try less, and learn less. Eventually, innovation gives way to caution, and the organization falls behind not because people are incapable, but because they have been trained to operate in fear.
+When something goes wrong, blame managers look for who to fault before they understand what failed. They treat problems as evidence of personal incompetence instead of checking for missing resources, unclear expectations, or weak process design. Over time, that creates a culture of fear. People protect themselves instead of solving problems, and innovation gives way to caution.
 
 ## The Missing Fourth Type
 
@@ -54,7 +32,7 @@ The fourth anti-leader is different because the damage is often less dramatic at
 
 This leader uses their position primarily to make their own life easier.
 
-They build schedules around their convenience. They delegate unpleasant work downward without much thought. They expect flexibility from others while protecting it for themselves. They use authority to secure comfort, not to create clarity, growth, or support for the team.
+They build schedules around their convenience. They push unpleasant work downward without much thought. They expect flexibility from others while protecting it for themselves. They use authority to secure comfort, not to create clarity, growth, or support for the team.
 
 This is the "it's about me" leader.
 
@@ -66,11 +44,9 @@ I recognize it because, at 16 years old, I was that leader.
 
 When I was 16, I managed a small snack bar at a country club. It was a simple operation with a team of three, including me.
 
-I handled the schedule, and I made it work for my needs. I did not ask the other two what they needed. I did not think much about fairness. I did not think about what it meant to lead. I simply treated the small amount of authority I had as a tool to make my own life easier.
+I handled the schedule, and I made it work for my needs. I did not ask the other two what they needed. I was not thinking about fairness or leadership. I was simply using the small amount of authority I had to make my own life easier.
 
-Then came the moment that exposed what I had built.
-
-Later, I needed flexibility from the other two. I needed them to adjust. I needed them to help carry the load.
+Then, eventually, I needed flexibility from them.
 
 Instead, they mirrored exactly what I had modeled. They did what worked for them and nothing more.
 
@@ -82,7 +58,7 @@ That was an early lesson, but it was one of the most important leadership lesson
 
 Leadership is not about arranging things around your own needs. It is about understanding and serving the needs of the people you are responsible for.
 
-## People Follow the Example You Set
+## Why This Type Is So Damaging
 
 One of the most consistent truths in leadership is that people take their cue from the behavior they see.
 
@@ -94,23 +70,13 @@ On the other hand, if the leader consistently makes decisions with the team in m
 
 Culture is not built mainly through slogans or values statements. It is built through repeated examples, especially from the people with authority.
 
-That is why the "it's about me" leader can be so destructive. This type of leader normalizes self-interest at the top, and that behavior spreads quickly.
-
-Organizations where everyone is looking out only for themselves do not grow well. They do not innovate well. They do not build trust well. And over time, they get passed by.
-
-## Why This Type Can Be the Most Damaging
-
-The "my way" leader stifles ideas. The control freak slows growth. The blame manager creates fear.
-
-The self-focused leader does something broader: they corrode the social contract that makes teams function.
-
-They turn leadership into a personal perk instead of a responsibility.
+That is why the "it's about me" leader can be so destructive. The "my way" leader stifles ideas. The control freak slows growth. The blame manager creates fear. But the self-focused leader does something broader: they normalize self-interest at the top and corrode the social contract that makes teams function.
 
 Once that happens, trust starts to thin out. Discretionary effort disappears. People stop offering the extra thought, extra care, and extra initiative that healthy organizations depend on. Not because they are lazy, but because they are responding rationally to the example they have been given.
 
 I have seen this pattern in multiple organizations over the years, and the outcome is consistent. Innovation drops. Hard work becomes more transactional. Teams become less resilient. People become less invested in one another and in the larger mission.
 
-That is why I now see this fourth anti-leader as a missing piece in the original framework.
+That is why I now see this fourth anti-leader as the missing piece in the original framework.
 
 ## The Standard Real Leaders Must Meet
 
