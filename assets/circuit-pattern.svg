@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <!-- Circuit traces -->
+  <g stroke="#2e7d32" stroke-width="1.5" stroke-linecap="square" fill="none" opacity="0.13">
+    <!-- Horizontal trace left -->
+    <line x1="0" y1="25" x2="45" y2="25"/>
+    <!-- L-turn right and across -->
+    <polyline points="45,25 45,50 120,50"/>
+    <!-- Bottom horizontal traces -->
+    <line x1="0" y1="85" x2="30" y2="85"/>
+    <polyline points="75,65 75,85 120,85"/>
+    <!-- Vertical stubs -->
+    <line x1="25" y1="0" x2="25" y2="25"/>
+    <line x1="90" y1="0" x2="90" y2="22"/>
+    <line x1="30" y1="85" x2="30" y2="120"/>
+    <line x1="75" y1="50" x2="75" y2="65"/>
+  </g>
+  <!-- Via pads / nodes -->
+  <g fill="#2e7d32" opacity="0.18">
+    <circle cx="45" cy="25" r="3.5"/>
+    <circle cx="45" cy="50" r="3"/>
+    <circle cx="75" cy="50" r="2.5"/>
+    <circle cx="75" cy="65" r="2.5"/>
+    <circle cx="75" cy="85" r="3.5"/>
+    <circle cx="30" cy="85" r="2.5"/>
+    <circle cx="25" cy="25" r="2.5"/>
+    <circle cx="90" cy="22" r="2"/>
+  </g>
+</svg>
