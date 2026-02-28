@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="How I built a local handwritten-math OCR and verification pipeline that handles noisy model output without depending on a cloud LLM.">
+
+    <title>Bigger Is Not Always Better — Kent W. Morrison</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../../assets/Color logo with background.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+
+    <!-- ─── Header ──────────────────────────────────────────── -->
+    <header class="site-header">
+        <nav class="nav">
+            <a href="../../" class="nav-brand">RyKel Solutions</a>
+            <ul class="nav-links">
+                <li><a href="../../#articles">Articles</a></li>
+                <li><a href="../../#about">About</a></li>
+                <li>
+                    <a href="https://www.linkedin.com/in/kent-w-morrison/"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="nav-linkedin">LinkedIn ↗</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- ─── Article Header ────────────────────────────────── -->
+        <div class="article-header">
+            <div class="article-header-inner">
+                <a href="../../#articles" class="article-back">← Back to Articles</a>
+                <p class="article-category">Technical</p>
+                <h1 class="article-title">Bigger Is Not Always Better: Fast, Reliable Local OCR Grading with Small Vision Models</h1>
+                <p class="article-subtitle">How I built a local handwritten-math OCR and verification pipeline that handles noisy model output without depending on a cloud LLM.</p>
+            </div>
+        </div>
+
+        <!-- ─── Article Body ──────────────────────────────────── -->
+        <article class="article-body">
+            <div class="article-body-inner">
+
+                <h2>The Problem I Actually Needed to Solve</h2>
+                <p>I was not trying to build a perfect handwriting recognition system. I was trying to reduce teacher workload.</p>
+                <p>The real task was narrower and more practical: take a student scratchpad image, extract the handwritten math steps, and determine two things with reasonable confidence:</p>
+                <ul>
+                    <li>Did the student likely reach the correct answer?</li>
+                    <li>Did the student likely show their work?</li>
+                </ul>
+                <p>That distinction matters. In a classroom setting, teachers do not need a research-grade OCR benchmark winner. They need something reliable enough to turn a pile of handwritten practice into a faster review workflow. If the system can correctly identify the final answer most of the time, and if it can detect whether the student produced a visible chain of work, it already removes a meaningful amount of repetitive grading effort.</p>
+                <p>That framing shaped the entire system. The constraints were not abstract model-quality numbers. The constraints were low latency, messy handwriting, privacy, and classroom reliability.</p>
+
+                <h2>Why I Chose Local Models Instead of a Bigger Remote Model</h2>
+                <p>The most common question people ask about this work is why I did not just send images to a large cloud model. On paper, that sounds like the easier option. In practice, it was the wrong fit for the problem I was solving.</p>
+
+                <h3>1. Cost Grows Faster Than It Looks</h3>
+                <p>Cloud inference costs are easy to underestimate because the unit economics look small in isolation. In a classroom workflow, they compound quickly.</p>
+                <p>One student can generate multiple problems on a single assignment. A single class of 25 students doing 20 problems each creates hundreds of opportunities for OCR. In my working estimate, that is roughly 500 OCR events minimum and more if you need retries, rescans, or multiple image passes. If every one of those is sent to a paid remote model, the cost curve stops being theoretical and starts becoming operational.</p>
+                <p>That matters even more when the system is intended to sit in a regular teaching workflow. I did not want a design that looked affordable in a demo but became expensive as soon as it was used regularly.</p>
+
+                <h3>2. Privacy Still Matters Even If You Minimize the Payload</h3>
+                <p>Student handwriting is not just generic content. It is identifying data.</p>
+                <p>Even if the uploaded image can be stripped of names or wrapped in anonymized identifiers, the handwriting itself can still be treated as biometric or personally identifying information. That means sending it to the cloud introduces a real privacy boundary. It is still student work leaving the local environment and being transmitted to an external service.</p>
+                <p>For a classroom product, that boundary matters. I wanted to keep the grading path local where possible, both to reduce risk and to simplify the story around handling student data.</p>
+
+                <h3>3. Speed Matters at Classroom Scale</h3>
+                <p>Latency is not just a "nice to have" in this kind of system. It directly affects whether the workflow feels usable.</p>
+                <p>When a teacher is processing many student submissions, the difference between local processing and cloud processing is not just the time for a single API call. It is the total effect of network round-trips, service contention, retries, and batch waiting. Those delays stack up quickly when many handwritten images are being evaluated in one session.</p>
+                <p>Local processing removes that overhead. If the model is already loaded, the request can stay on the machine or local network. That cuts out internet transit and reduces the "why is this still spinning?" problem that makes grading tools feel unreliable.</p>
+
+                <h3>4. A Cloud LLM Was Overkill for the Actual Goal</h3>
+                <p>This is the most important reason.</p>
+                <p>I was not trying to build a system that transcribes every mark on the page perfectly. I was trying to build a system that reliably supports a teacher.</p>
+                <p>Those are different goals.</p>
+                <p>For this use case, the grading logic can be deterministic. Once I have a plausible sequence of equation states, I can use rule-based validation to check whether the transformations make sense and whether the final answer balances. The OCR step does not need to be flawless. It only needs to be good enough to preserve grading signal.</p>
+                <p>That changes the economics of the model decision. A large cloud LLM may be more capable in a broad sense, but that capability is not always useful here. If a smaller local model can extract enough structure for a deterministic verifier to finish the job, then the larger model is unnecessary overhead.</p>
+                <p>In other words, I was not optimizing for perfect transcription. I was optimizing for a system that could say, with useful confidence, "this student likely solved it correctly" and "this student likely showed work."</p>
+
+                <h3>5. Local Network Dependence Is Better Than Internet Dependence</h3>
+                <p>Classroom software has to keep working under ordinary, imperfect conditions.</p>
+                <p>If the grading flow depends on an external model provider, then internet problems become grading problems. If the school network is unstable, if an upstream service is degraded, or if the connection simply stalls, the grading pipeline slows down or fails.</p>
+                <p>A local-first design is not immune to operational issues, but it gives me tighter control over them. I would rather depend on a local runtime I can monitor and recover than on internet connectivity and an external service boundary I do not control.</p>
+                <p>That is why I treat the "local vs remote" decision as a systems decision, not a benchmark decision.</p>
+
+                <h2>The Architecture</h2>
+                <p>At a high level, the pipeline is straightforward:</p>
+                <ul>
+                    <li>A scratchpad image is captured as a PNG.</li>
+                    <li>A local vision model reads the image and returns OCR-like output.</li>
+                    <li>A cleanup layer normalizes and restructures that output into candidate math rows.</li>
+                    <li>A math-aware verifier checks equation validity and transformation quality.</li>
+                    <li>The system returns a score and a judgment about whether the student likely showed their work.</li>
+                </ul>
+                <p>The important detail is that each stage assumes the previous stage can fail in small, messy ways.</p>
+                <p>I am currently running this through a local Ollama-backed path with two small models in play: <code>ministral-3:3b</code> as the primary path and <code>glm-ocr</code> as a fallback. That pairing reflects the core design choice of the system: use a fast primary model, but build the surrounding pipeline so a miss from the first model does not collapse the whole grading attempt.</p>
+
+                <h2>Small Models Work If You Design for Failure</h2>
+                <p>The most useful lesson from this work is that model size is only part of the story. The surrounding system design often matters more.</p>
+                <p>Small local models are imperfect. They skip rows. They misread symbols. They produce malformed LaTeX-like fragments. They sometimes return structure that is inconsistent enough to break naive parsing.</p>
+                <p>If the rest of the system expects clean output, the whole pipeline looks fragile.</p>
+                <p>If the rest of the system is built around cleanup, verification, and fallback, those same small models become much more usable.</p>
+                <p>That is the pattern I leaned into.</p>
+
+                <h2>Dual-Model Strategy: Fast Primary, Deterministic Fallback</h2>
+                <p>The first protection layer is model fallback.</p>
+                <p>The pipeline starts with the primary vision model. If that request fails, the system automatically retries with a fallback model instead of failing the grading attempt immediately. That matters for operational resilience, but it also matters because models fail differently. A model that struggles on one handwriting style may still produce a usable read on the same image when a different model is tried.</p>
+                <p>I also added a continuation probe for the <code>glm-ocr</code> path. In practice, one recurring failure mode was that the model would miss the bottom of the page, especially the final answer row. Rather than throwing out the attempt, the pipeline checks whether the cleaned result looks incomplete. If it does, it issues a second prompt that tells the model to read the image as one continuous problem from top to bottom, then merges the new result with the original scan.</p>
+                <p>That is not glamorous, but it is exactly the kind of engineering decision that makes a local model practical.</p>
+
+                <h2>Post-Processing Is the Real Product</h2>
+                <p>Raw OCR output is not directly usable for grading. The cleanup layer does a large share of the real work.</p>
+                <p>This part of the pipeline takes the model response and aggressively normalizes it into something the verifier can reason about. That includes:</p>
+                <ul>
+                    <li>Extracting useful data from mixed or semi-structured model output.</li>
+                    <li>Splitting rows on embedded newlines when the model collapses multiple equations into one blob.</li>
+                    <li>Splitting on commas only when those commas appear to separate actual equation states.</li>
+                    <li>Repairing malformed LaTeX fragments and normalizing fractions.</li>
+                    <li>Deduplicating repeated or overlapping rows.</li>
+                    <li>Filtering out text that is not actually an equation.</li>
+                </ul>
+                <p>The fraction handling is a good example of why this matters. OCR for handwritten math often produces broken fragments like malformed <code>frac</code> commands or partially escaped expressions. If that text is passed straight into validation, the grader fails for the wrong reason. If it is normalized first, the system can recover a large amount of usable signal.</p>
+                <p>This is one of the central themes of the project: the raw model output is not the product. The cleaned, structured, grading-ready representation is the product.</p>
+
+                <h2>Math-Aware Validation Beats String Matching</h2>
+                <p>After cleanup, the pipeline moves into deterministic validation.</p>
+                <p>This is where the system stops acting like a generic OCR reader and starts acting like a math grader.</p>
+                <p>Instead of checking whether the student's text exactly matches an expected string, the verifier checks equation states and transformations. It can substitute candidate values into each side of an equation, confirm whether the equation balances, and inspect whether one line reasonably follows from the previous line.</p>
+                <p>That matters because students do not all write the same way. Equivalent steps can look different on the page. A pure string comparison approach is brittle. A math-aware validation path is much more aligned with the actual grading task.</p>
+                <p>I also added targeted OCR correction logic for common symbol and digit confusions. If a row does not balance, the verifier can try small, plausible corrections, such as swapping commonly confused digits or correcting a missing negative sign. Those corrections are tracked with confidence scores so the system can distinguish "clearly valid" from "likely recovered after OCR cleanup."</p>
+                <p>There is also a "next-row lookahead" behavior for cases where one row is bad but the surrounding work is still meaningful. If the chain breaks because the previous row is invalid, the verifier can check whether the next row still forms a valid transformation. That lets the system preserve grading signal instead of treating one OCR error as a total failure.</p>
+                <p>This is the difference between building a brittle transcription pipeline and building a resilient grading pipeline.</p>
+
+                <h2>What Made It Robust in Practice</h2>
+                <p>Several practical controls made the system usable beyond the happy path.</p>
+                <p>Timeout handling matters because local model runtimes can stall, especially on cold starts. Health checks matter because it is not enough to assume the local runtime is available; the application needs to know whether the vision model is actually loaded. Model-specific prompts matter because different local models respond better to different instructions and cleanup strategies.</p>
+                <p>None of those decisions are individually dramatic. Together, they are what turn a small local model into a dependable part of a workflow.</p>
+                <p>This is also why I am skeptical of model-only comparisons. In a real product, "which model is best?" is often a less useful question than "which system degrades gracefully when the model is imperfect?"</p>
+
+                <h2>Where the Small Local Approach Was Good Enough</h2>
+                <p>In this project, the local-first approach was good enough when the goal was to reduce repetitive teacher effort rather than automate grading with absolute certainty.</p>
+                <p>If the system can:</p>
+                <ul>
+                    <li>Read most of the student's equation chain,</li>
+                    <li>Recover from common OCR noise,</li>
+                    <li>Verify whether the math is internally consistent,</li>
+                    <li>And give a useful signal about whether the student showed their work,</li>
+                </ul>
+                <p>then it already creates value.</p>
+                <p>That is the bar I care about.</p>
+                <p>I do not need it to replace human judgment. I need it to compress the amount of routine checking a teacher has to do before they step in.</p>
+
+                <h2>What I Would Improve Next</h2>
+                <p>There are still clear areas to improve.</p>
+                <p>I want better confidence calibration so the system can express uncertainty more precisely. I want a tighter error taxonomy by model so I can measure which failure modes belong to OCR, which belong to parsing, and which belong to grading logic. I also want a stronger regression harness built around a curated corpus of OCR edge cases, because this kind of system improves fastest when the weird failures are captured and replayed intentionally.</p>
+                <p>Those are normal next steps for a system like this. The important point is that they are system refinements, not a sign that the local-first approach was flawed.</p>
+
+                <h2>The Main Lesson</h2>
+                <p>The core lesson from this work is simple: bigger models are not automatically better for a practical workflow.</p>
+                <p>When the actual job is narrow, the output can be verified deterministically, and reliability matters as much as raw model capability, a small local model can be the right tool. The quality of the surrounding system — including cleanup, fallback logic, validation, and operational control — can matter more than jumping to a larger remote model.</p>
+                <p>That is what this project demonstrated for me.</p>
+                <p>I did not need a massive model to solve the problem. I needed a model that was good enough, cheap enough, private enough, and fast enough to fit the real environment where teachers would use it.</p>
+
+            </div>
+        </article>
+
+    </main>
+
+    <!-- ─── Footer ────────────────────────────────────────────── -->
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 Kent W. Morrison &bull; RyKel Solutions</p>
+            <p class="footer-tagline">INNOVATE &mdash; GROW &mdash; SUCCEED</p>
+        </div>
+    </footer>
+
+</body>
+</html>
