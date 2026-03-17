@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="How I structured activities, widgets, and harnesses with explicit contracts so the platform can grow without host-app rewrites.">
+
+    <title>Contract-First Plugin Architecture — Kent W. Morrison</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../../assets/Color logo with background.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../style.css?v=8">
+</head>
+<body>
+
+    <!-- ─── Header ──────────────────────────────────────────── -->
+    <header class="site-header">
+        <nav class="nav">
+            <a href="../../" class="nav-brand">RyKel Solutions</a>
+            <ul class="nav-links">
+                <li><a href="../../#articles">Articles</a></li>
+                <li><a href="../../#about">About</a></li>
+                <li>
+                    <a href="https://www.linkedin.com/in/kent-w-morrison/"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="nav-linkedin">LinkedIn ↗</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- ─── Article Header ────────────────────────────────── -->
+        <div class="article-header">
+            <div class="article-header-inner">
+                <a href="../../#articles" class="article-back">← Back to Articles</a>
+                <p class="article-category">Technical</p>
+                <h1 class="article-title">Contract-First Plugin Architecture: Enforcing Boundaries Without Slowing Teams Down</h1>
+                <p class="article-subtitle">How I structured activities, widgets, and harnesses with explicit contracts so the platform can grow without host-app rewrites.</p>
+                <div class="article-meta">
+                    <span class="article-meta-item"><strong>Kent W. Morrison</strong></span>
+                    <div class="article-meta-divider"></div>
+                    <span class="article-meta-item">March 2026</span>
+                    <div class="article-meta-divider"></div>
+                    <span class="article-meta-item">10 min read</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Article Body ──────────────────────────────────── -->
+        <article class="article-body">
+            <div class="article-body-inner">
+
+                <h2 style="margin-top:0">The Real Scaling Problem in Plugin Systems</h2>
+                <p>Most plugin architectures do not fail because they lack extension points. They fail because the extension points are nominal while the real system still depends on hidden reach-ins, deep imports, and object-boundary exceptions.</p>
+                <p>That failure mode showed up quickly in this project. Once you have more than a few widgets and at least one activity that composes them, the dangerous shortcuts become obvious:</p>
+                <ul>
+                    <li>harnesses start importing implementation files directly because it is faster in the moment,</li>
+                    <li>activities begin to depend on widget-specific internals instead of widget contracts,</li>
+                    <li>host apps reconstruct metadata from plugin folders instead of consuming exported registries,</li>
+                    <li>mode behavior drifts because permissions live in UI conditionals instead of typed runtime contracts.</li>
+                </ul>
+                <p>The short-term result is speed. The medium-term result is boundary drift. And once boundary drift becomes normal, every new plugin increases integration cost for the whole platform.</p>
+                <p>That is why I moved the system toward a contract-first model. The goal was not abstract cleanliness. The goal was to make plugin growth predictable enough that new capabilities could be added without rewriting host code every time.</p>
+
+                <h2>Why This Architecture Mattered Here</h2>
+                <p>The current implementation is intentionally narrow and concrete. One of the clearest examples is a headless equation-generation widget whose default configuration is explicitly math-first and standards-aware:</p>
+<pre><code>const DEFAULT_EQUATION_GENERATION_CONFIG = {
+  subject: 'math',
+  standards: ['8.EE.C.7'],
+  description: 'Generate linear-equation prompts with worked-step expectations for grade 8.',
+  generationPolicy: 'unique_per_assignment',
+}</code></pre>
+                <p>That tells you two things about the product reality.</p>
+                <p>First, the system is not pretending to be subject-agnostic from day one. The current implementation is grounded in a real use case: math workflows with explicit standards metadata. Second, the architecture cannot stay hard-coded to that use case if the platform is supposed to expand. If every new subject, generator, or evaluator requires host-specific rewiring, then "plugin architecture" is just branding over a monolith.</p>
+                <p>The design target was stricter than "make plugins possible." I wanted a system where a new widget or activity can be integrated through stable metadata and exported contracts, not through one-off host patches.</p>
+
+                <h2>Start With Object Boundaries, Not Components</h2>
+                <p>The first step was naming the objects and making their boundaries explicit.</p>
+                <p>In this system, there are three separate plugin-related objects:</p>
+                <ol>
+                    <li>Activities orchestrate widgets.</li>
+                    <li>Widgets own their own implementation details.</li>
+                    <li>Harnesses simulate the host.</li>
+                </ol>
+                <p>Those boundaries are not left to convention. They are written down in the project rules and repeated in the shared contracts.</p>
+                <p>The core rules are simple:</p>
+                <ul>
+                    <li>activity harnesses are host-only,</li>
+                    <li>activities own widget orchestration,</li>
+                    <li>widgets own widget implementation details,</li>
+                    <li>non-widget code must access widgets only through exported APIs or metadata.</li>
+                </ul>
+                <p>A separate harness contract turns that into an operational rule set. A harness must provide host inputs, capture host-observable outputs, and simulate student persistence. It must not implement widget orchestration logic or import raw implementation files.</p>
+                <p>That seems obvious until you look at how plugin systems usually decay. The harness is often where architecture shortcuts get normalized because it is "just dev tooling." I treated the harness as a boundary test instead. If the harness needs direct widget imports to make an activity work, the activity boundary is already wrong.</p>
+
+                <h2>The Widget Contract Is a Schema, Not a Vibe</h2>
+                <p>The next step was making widget identity and taxonomy canonical.</p>
+                <p>The widget contract defines a shared <code>WidgetDefinition</code> shape with fields such as <code>widgetType</code>, <code>typeKey</code>, <code>typeId</code>, <code>functionKey</code>, <code>uiViews</code>, <code>resizeSync</code>, <code>inputSchema</code>, and <code>outputSchema</code>. A JSON schema then validates that structure.</p>
+                <p>That schema does a few useful things.</p>
+                <p>It fixes the runtime identifier around <code>widgetType</code>, so activities and hosts have one canonical lookup key. It locks <code>typeKey</code> and <code>typeId</code> together, so a widget cannot casually drift from <code>display-type</code> to <code>input-type</code> without an explicit contract change. It also constrains <code>functionKey</code> to a shared vocabulary such as <code>student-input</code>, <code>assessment</code>, and <code>authoring-aid</code>.</p>
+                <p>The important part is not the specific field names. The important part is that the taxonomy is centralized and reviewable.</p>
+                <p>In the activity types, that same contract becomes host-consumable metadata:</p>
+<pre><code>export interface AvailableWidgetDefinition {
+  widgetType: string
+  displayName: string
+  typeKey: WidgetTypeKey
+  typeId: 1 | 2 | 3 | 4
+  role: WidgetRole
+  submissionState?: WidgetSubmissionState
+  iconUrl?: string
+  uiViews?: WidgetUiViews
+  resizeSync?: WidgetResizeSync
+  generatedOutputFields?: GeneratedOutputFieldDefinition[]
+  status?: 'ready' | 'stub'
+}</code></pre>
+                <p>That is the bridge between documentation and runtime. The written contract defines the authoritative taxonomy. The typed activity interface defines exactly what the host and activity are allowed to rely on.</p>
+
+                <h2>Typed Host Interfaces Make Integration Reviewable</h2>
+                <p>An <code>exit-ticket</code> activity is where the contract-first approach becomes concrete.</p>
+                <p>Its host-facing type surface defines:</p>
+                <ul>
+                    <li>mode as a closed union: <code>design | edit | preview | student | review</code>,</li>
+                    <li>a typed capability model,</li>
+                    <li>the design manifest shape,</li>
+                    <li>the implementation manifest shape,</li>
+                    <li>the student manifest shape,</li>
+                    <li>widget runtime and post-submit semantics.</li>
+                </ul>
+                <p>That matters because the host relationship stops being implicit. The activity does not "just know" what the host will provide. It declares the dependency surface in code.</p>
+                <p>The props for <code>ExitTicketActivity</code> are explicit:</p>
+<pre><code>export interface ExitTicketActivityProps {
+  mode: ActivityMode
+  designManifest: ExitTicketDesignManifest
+  implementationManifest: ExitTicketImplementationManifest
+  assignmentId?: string
+  assignedAt?: string
+  studentManifest?: ExitTicketStudentManifest | null
+  availableWidgets: AvailableWidgetDefinition[]
+  widgetRegistry: Record&lt;string, WidgetHostAdapter&gt;
+}</code></pre>
+                <p>The runtime then enforces that contract instead of silently tolerating missing host state. The activity throws immediately if <code>availableWidgets</code> is empty or <code>widgetRegistry</code> is missing. In <code>preview</code>, <code>student</code>, and <code>review</code> modes it also throws if the host does not provide <code>assignmentId</code> and <code>assignedAt</code>.</p>
+                <p>That is the kind of friction I want. If a host integration is incomplete, I want the contract failure to be obvious at the boundary, not buried somewhere in rendering behavior.</p>
+
+                <h2>The Registry Is the Only Legal Access Path</h2>
+                <p>The most important architectural move here is that widget consumption happens through exported APIs and registries, not through path reach-ins.</p>
+                <p>A public widget API re-exports the supported widget surface. That includes widget definitions like <code>scratchpadWidget</code>, public components like <code>ScratchPad</code>, and helper APIs such as <code>createEquationGenerationAssignmentPatches(...)</code>. The activity-side widget registry imports only from that public API and turns those exports into two host-facing objects:</p>
+                <ul>
+                    <li><code>EXIT_TICKET_AVAILABLE_WIDGETS</code></li>
+                    <li><code>EXIT_TICKET_WIDGET_REGISTRY</code></li>
+                </ul>
+                <p><code>EXIT_TICKET_AVAILABLE_WIDGETS</code> is pure metadata. It tells the activity which widgets exist, how they are classified, what role they commonly fill, whether they are <code>ready</code> or <code>stub</code>, and which UI views they support.</p>
+                <p><code>EXIT_TICKET_WIDGET_REGISTRY</code> is the behavior map. It binds a <code>widgetType</code> to the renderer, scoring, post-submit, and feedback callbacks the activity is allowed to use.</p>
+                <p>That split matters.</p>
+                <p>Metadata lets the activity compose and validate widgets without knowing their internals. The registry lets it invoke widget behavior through a stable adapter surface. Together, those two objects replace the fragile pattern of "just import the component you need from wherever it lives."</p>
+                <p>The equation-generation widget is a good example. It is classified as <code>data-generation-type</code>, marked with <code>generatedOutputFields</code>, and exposed through the registry with a <code>runOnAssignmentCreate</code> adapter that returns generic assignment patches. The activity consumes the result as contract data. It does not reach into the generator's private implementation to mutate other widgets directly.</p>
+
+                <h2>Harnesses Should Prove the Boundary, Not Bypass It</h2>
+                <p>The exit-ticket harness follows the same rule.</p>
+                <p>At the integration layer, the harness imports only the public activity entry point and the widget registry:</p>
+<pre><code>import { ExitTicketActivity } from '@exit-ticket-activity'
+import {
+  EXIT_TICKET_AVAILABLE_WIDGETS,
+  EXIT_TICKET_WIDGET_REGISTRY,
+} from '@widget-registry'</code></pre>
+                <p>That is the point of the harness contract. The harness acts like a host. It provides manifests, mode, student context, <code>availableWidgets</code>, and <code>widgetRegistry</code>. It captures output snapshots and student manifests. It does not orchestrate widgets itself.</p>
+                <p>The build configuration is just as important. The aliases resolve only to public entry points, not to private implementation modules. That sounds minor, but it removes a common loophole. If an alias resolves to internals, the boundary rule is meaningless.</p>
+                <p>This is also why I kept the scratchpad plugin's host contract narrow. Its distribution guide defines the host integration API as:</p>
+                <ul>
+                    <li><code>save()</code></li>
+                    <li><code>getPng()</code></li>
+                    <li><code>getSvg()</code></li>
+                    <li><code>clear()</code></li>
+                </ul>
+                <p>Everything else, including OCR and grading behavior, stays outside the plugin boundary. The host can evolve its analysis pipeline without turning the widget into an application-specific blob.</p>
+
+                <h2>Mode Gating Belongs in the Contract</h2>
+                <p>A lot of plugin systems treat mode handling as UI logic. That is where behavior drift starts.</p>
+                <p>In the activity implementation, mode defaults are declared as a typed map from <code>ActivityMode</code> to <code>ActivityCapabilities</code>. That makes permissions reviewable. <code>design</code> can change structure. <code>edit</code> can change parameters but not structure. <code>preview</code> simulates student behavior without official submission. <code>student</code> can submit officially. <code>review</code> is read-only.</p>
+                <p>Because those capabilities are typed and centralized, the runtime can use them consistently instead of scattering permissions across JSX branches.</p>
+                <p>The submit flow uses the same approach. Widgets can declare <code>submissionState</code> values such as <code>required_pre_submit</code> or <code>post_submit</code>, and the activity executes post-submit adapters only for widgets that explicitly opt into that phase. Again, the point is not the specific field names. The point is that workflow semantics are part of the contract.</p>
+
+                <h2>Contract Evolution Is a First-Class Problem</h2>
+                <p>Once contracts become the architecture, contract evolution becomes governance.</p>
+                <p>The widget contract already encodes that. The breaking-change policy explicitly treats changes to <code>widgetType</code>, <code>typeKey</code>, <code>typeId</code>, <code>functionKey</code>, required input fields, and required output fields as contract-breaking unless a backward-compatible path exists.</p>
+                <p>There is also a practical compatibility choice in the widget contract: <code>uiViews</code> is optional in the shared schema today so older widget definitions do not break immediately, but new and updated UI widgets are expected to include it. That is a small but important example of how to evolve a contract without surprising consumers.</p>
+                <p>I also keep the documentation update rule strict. If code-level interfaces change, the corresponding contract docs change in the same work session. Without that rule, the schema and the code drift apart, and the architecture eventually becomes aspirational documentation.</p>
+
+                <h2>What This Buys Me and What It Costs</h2>
+                <p>The practical outcomes are straightforward.</p>
+                <p>Refactors get safer because the integration points are concentrated in documented contracts and registries. New widgets do not automatically imply host rewrites. Harnesses become useful because they validate host-facing behavior instead of secretly depending on implementation details. And the activity layer stays reusable across subjects because it consumes widget roles, metadata, and adapters rather than math-specific widget internals.</p>
+                <p>The tradeoffs are also real.</p>
+                <p>Contract-first systems demand more upfront type work, more review discipline, and more governance around what becomes public API. If you are careless, the public contract becomes the new dumping ground. The answer is not to relax the boundaries. The answer is to keep the public surface deliberately small and force new requirements through review.</p>
+
+                <h2>What I Would Add Next</h2>
+                <p>The architecture is solid enough to grow, but the next improvements are obvious:</p>
+                <ol>
+                    <li>CI checks that validate widget definitions against the shared JSON schema.</li>
+                    <li>Contract diff tooling for pull requests so breaking API changes are visible immediately.</li>
+                    <li>Cross-plugin compatibility tests that exercise activities against registries and harnesses, not just isolated widgets.</li>
+                    <li>A real third-party authoring guide that explains exactly how to ship a new widget or activity without depending on undocumented internal knowledge.</li>
+                </ol>
+                <p>That last piece matters most if the platform is supposed to evolve beyond a math-first implementation. The internal contracts are already doing the heavy lifting. The next step is turning them into an external contribution model.</p>
+
+                <h2>The Main Lesson</h2>
+                <p>The biggest mistake in plugin architecture is treating boundaries as a social preference instead of an executable design constraint.</p>
+                <p>The useful pattern was:</p>
+                <ul>
+                    <li>define taxonomy and shared contract shape in docs and schema,</li>
+                    <li>mirror those contracts in typed host interfaces,</li>
+                    <li>export a public API,</li>
+                    <li>bind behavior through registries,</li>
+                    <li>force harnesses and hosts to consume only those public surfaces,</li>
+                    <li>fail fast when required host inputs are missing.</li>
+                </ul>
+                <p>That approach is stricter than ad hoc plugin wiring, but it is also what makes the system extensible in practice. If outside contributors are ever going to add new content-generation, input, or evaluation plugins without patching the host application, this is the level of boundary discipline required.</p>
+
+            </div>
+        </article>
+
+    </main>
+
+    <!-- ─── Footer ────────────────────────────────────────────── -->
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 Kent W. Morrison &bull; RyKel Solutions</p>
+            <p class="footer-tagline">INNOVATE &mdash; GROW &mdash; SUCCEED</p>
+        </div>
+    </footer>
+
+</body>
+</html>
